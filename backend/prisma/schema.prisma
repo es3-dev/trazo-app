@@ -1,0 +1,314 @@
+generator client {
+provider = "prisma-client-js"
+}
+datasource db {
+provider = "postgresql"
+url = env("DATABASE_URL")
+}
+
+model Obra {
+  id Int @id @default(autoincrement()) @map("id_obras")
+  nombre String @map("nombre_obra") @db.VarChar(200)
+  direccion String? @db.VarChar(200)
+  expediente String? @unique @map("numero_expediente") @db.VarChar(100)
+  promotor String? @db.VarChar(200)
+  empresaConstructora String? @map("empresa_constructura") @db.VarChar(200)
+  direccionFacultativa String? @map("direccion_facultativa") @db.VarChar(200)
+  estado EstadoObra @default(ACTIVA)
+  asignaciones AsignacionObra[]
+  documentos Documento[]
+  partes ParteDiario[]
+actividadesPlan PlanActividad[]
+inspecciones Inspeccion[]
+  @@map("TBL_OBRAS")
+}
+model Inspeccion {
+id Int @id @default(autoincrement())
+obraId Int @map("id_obras")
+fecha DateTime @db.Date
+tipo TipoInspeccion
+zona String? @db.VarChar(150)
+responsable String @db.VarChar(150)
+resultado ResultadoInspeccion
+hallazgos String? @db.Text
+acciones String? @db.Text
+plazo DateTime? @db.Date
+estado EstadoInspeccion @default(ABIERTA)
+createdAt DateTime @default(now()) @map("created_at")
+obra Obra @relation(fields:[obraId],references:[id],onDelete:Cascade)
+@@index([obraId,estado])
+@@map("TBL_INSPECCIONES")
+}
+model PlanActividad {
+id Int @id @default(autoincrement())
+obraId Int @map("id_obras")
+nombre String @db.VarChar(200)
+zona String? @db.VarChar(100)
+responsable String? @db.VarChar(150)
+inicio DateTime @db.Date
+fin DateTime @db.Date
+avance Int @default(0)
+estado EstadoPlan @default(PENDIENTE)
+updatedAt DateTime @updatedAt @map("updated_at")
+obra Obra @relation(fields:[obraId],references:[id],onDelete:Cascade)
+@@unique([obraId,nombre])
+@@index([obraId,estado])
+@@map("TBL_PLAN_ACTIVIDADES")
+}
+model Persona {
+  id Int @id @default(autoincrement()) @map("id_persona")
+  documento String? @unique @db.VarChar(50)
+  nombres String @db.VarChar(100)
+  apellidos String @db.VarChar(100)
+  email String? @unique @db.VarChar(100)
+  telefono String? @db.VarChar(30)
+  usuario Usuario?
+  roles PersonaRol[]
+  empresas PersonaEmpresa[]
+  ocupaciones PersonaOcupacion[]
+  asignaciones AsignacionObra[]
+  documentos Documento[]
+  partesRedactados ParteDiario[]
+  @@map("TBL_PERSONAS")
+}
+model Usuario {
+  id Int @id @default(autoincrement())
+  personaId Int @unique @map("id_persona")
+  email String @unique @db.VarChar(100)
+  passwordHash String @map("password_hash")
+  activo Boolean @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  persona Persona @relation(fields:[personaId],references:[id],onDelete:Cascade)
+  @@map("TBL_USUARIOS")
+}
+model Rol {
+id Int @id @default(autoincrement()) @map("id_rol")
+nombre String @unique @map("nombre_rol") @db.VarChar(100)
+personas PersonaRol[]
+asignaciones AsignacionObra[]
+@@map("TBL_ROLES_SISTEMAS")
+}
+model Ocupacion {
+id Int @id @default(autoincrement()) @map("id_ocupacion")
+nombre String @unique @map("nombre_ocupacion") @db.VarChar(100)
+personas PersonaOcupacion[]
+asistencias Asistencia[]
+@@map("TBL_OCUPACION")
+}
+model Empresa {
+id Int @id @default(autoincrement()) @map("id_empresa")
+nitRut String @unique @map("nit_rut") @db.VarChar(50)
+razonSocial String @map("razon_social") @db.VarChar(200)
+personas PersonaEmpresa[]
+asignaciones AsignacionObra[]
+asistencias Asistencia[]
+suministros Suministro[]
+@@map("TBL_EMPRESAS")
+}
+model Equipo {
+id Int @id @default(autoincrement()) @map("id_equipos_maquinaria")
+descripcion String @db.VarChar(200)
+tipoModelo String? @map("tipo_modelo") @db.VarChar(100)
+usos UsoMaquinaria[]
+@@map("TBL_EQUIPOS_MAQUINARIA")
+}
+model CategoriaDocumento {
+id Int @id @default(autoincrement()) @map("id_categoria_documento")
+nombre String @unique @map("nombre_categoria") @db.VarChar(100)
+documentos Documento[]
+@@map("TBL_CATEGORIA_DOCUMENTO")
+}
+model PersonaRol {
+personaId Int @map("id_persona")
+rolId Int @map("id_rol")
+persona Persona @relation(fields:[personaId],references:[id],onDelete:Cascade)
+rol Rol @relation(fields:[rolId],references:[id],onDelete:Cascade)
+@@id([personaId,rolId])
+@@map("TBL_PERSONA_ROL")
+}
+model PersonaEmpresa {
+personaId Int @map("id_persona")
+empresaId Int @map("id_empresa")
+fechaInicio DateTime? @map("fecha_inicio") @db.Date
+fechaFin DateTime? @map("fecha_fin") @db.Date
+persona Persona @relation(fields:[personaId],references:[id],onDelete:Cascade)
+empresa Empresa @relation(fields:[empresaId],references:[id],onDelete:Cascade)
+@@id([personaId,empresaId])
+@@map("TBL_PERSONA_EMPRESA")
+}
+model PersonaOcupacion {
+personaId Int @map("id_persona")
+ocupacionId Int @map("id_ocupacion")
+persona Persona @relation(fields:[personaId],references:[id],onDelete:Cascade)
+ocupacion Ocupacion @relation(fields:[ocupacionId],references:[id],onDelete:Cascade)
+@@id([personaId,ocupacionId])
+@@map("TBL_PERSONA_OCUPACION")
+}
+model AsignacionObra {
+id Int @id @default(autoincrement()) @map("id_asignacion")
+obraId Int @map("id_obras")
+personaId Int @map("id_persona")
+rolId Int @map("id_rol")
+empresaId Int? @map("id_empresa")
+obra Obra @relation(fields:[obraId],references:[id],onDelete:Cascade)
+persona Persona @relation(fields:[personaId],references:[id],onDelete:Cascade)
+rol Rol @relation(fields:[rolId],references:[id])
+empresa Empresa? @relation(fields:[empresaId],references:[id])
+@@unique([obraId,personaId,rolId])
+@@map("TBL_ASIGNACION_OBRA")
+}
+model Documento {
+id Int @id @default(autoincrement()) @map("id_documento")
+obraId Int @map("id_obras")
+categoriaId Int @map("id_categoria_documento")
+responsableId Int @map("id_responsable")
+nombreOriginal String @map("nombre_original")
+ruta String @unique
+formato String @db.VarChar(50)
+tamano Int
+estado EstadoDocumento @default(VIGENTE)
+fechaRegistro DateTime @default(now()) @map("fecha_registro") @db.Date
+obra Obra @relation(fields:[obraId],references:[id])
+categoria CategoriaDocumento @relation(fields:[categoriaId],references:[id])
+responsable Persona @relation(fields:[responsableId],references:[id])
+@@map("TBL_ARCHIVO_DOCUMENTAL")
+}
+model ParteDiario {
+id Int @id @default(autoincrement()) @map("id_parte")
+obraId Int @map("id_obras")
+fecha DateTime @db.Date
+redactorId Int @map("id_redactor")
+horaEntrada DateTime? @map("hora_entrada") @db.Time
+horaSalida DateTime? @map("hora_salida") @db.Time
+firmaRedactor Boolean @default(false) @map("firma_redactor")
+firmaDireccion Boolean @default(false) @map("firma_dir_facultativa")
+obra Obra @relation(fields:[obraId],references:[id])
+redactor Persona @relation(fields:[redactorId],references:[id])
+climas Clima[]
+asistencias Asistencia[]
+maquinarias UsoMaquinaria[]
+tareas Tarea[]
+incidencias Incidencia[]
+suministros Suministro[]
+observaciones Observacion[]
+evidencias EvidenciaFotografica[]
+@@unique([obraId,fecha])
+@@map("TBL_PARTE_DIARIO")
+}
+model Clima {
+id Int @id @default(autoincrement()) @map("id_clima")
+parteId Int @map("id_parte")
+franjaHoraria String @map("franja_horaria") @db.VarChar(50)
+condicion String @db.VarChar(100)
+temperatura Decimal? @db.Decimal(5,2)
+precipitacion String? @db.VarChar(100)
+vientoMph Decimal? @map("viento_mph") @db.Decimal(5,2)
+parte ParteDiario @relation(fields:[parteId],references:[id],onDelete:Cascade)
+@@map("TBL_CLIMA_JORNADA")
+}
+model Asistencia {
+id Int @id @default(autoincrement()) @map("id_asistencia")
+parteId Int @map("id_parte")
+empresaId Int @map("id_empresa")
+ocupacionId Int @map("id_ocupacion")
+numTrabajadores Int @map("num_trabajadores")
+horasTotales Decimal @map("horas_totales") @db.Decimal(7,2)
+parte ParteDiario @relation(fields:[parteId],references:[id],onDelete:Cascade)
+empresa Empresa @relation(fields:[empresaId],references:[id])
+ocupacion Ocupacion @relation(fields:[ocupacionId],references:[id])
+@@map("TBL_PLANTILLA_ASISTENCIA")
+}
+model UsoMaquinaria {
+id Int @id @default(autoincrement()) @map("id_uso_maquinaria")
+parteId Int @map("id_parte")
+equipoId Int @map("id_equipos_maquinaria")
+estadoOperativo String @map("estado_operativo") @db.VarChar(100)
+parte ParteDiario @relation(fields:[parteId],references:[id],onDelete:Cascade)
+equipo Equipo @relation(fields:[equipoId],references:[id])
+@@map("TBL_USO_MAQUINARIA")
+}
+model Tarea {
+id Int @id @default(autoincrement()) @map("id_tarea")
+parteId Int @map("id_parte")
+zona String @map("zona_eje") @db.VarChar(100)
+descripcion String @db.Text
+avance String @db.VarChar(50)
+trabajoExtra Boolean @default(false) @map("trabajo_extra")
+autorizado Boolean @default(false)
+parte ParteDiario @relation(fields:[parteId],references:[id],onDelete:Cascade)
+@@map("TBL_TAREAS_EJECUTADAS")
+}
+model Incidencia {
+id Int @id @default(autoincrement()) @map("id_incidencia")
+parteId Int @map("id_parte")
+tipo String @db.VarChar(100)
+hora DateTime? @db.Time
+descripcion String @map("descripcion_detallada") @db.Text
+parte ParteDiario @relation(fields:[parteId],references:[id],onDelete:Cascade)
+@@map("TBL_INCIDENCIAS_HSE")
+}
+model Suministro {
+id Int @id @default(autoincrement()) @map("id_suministro")
+parteId Int @map("id_parte")
+empresaId Int @map("id_empresa")
+descripcionMaterial String @map("descripcion_material") @db.VarChar(200)
+numAlbaran String? @map("num_albaran") @db.VarChar(100)
+conforme Boolean @default(false)
+parte ParteDiario @relation(fields:[parteId],references:[id],onDelete:Cascade)
+empresa Empresa @relation(fields:[empresaId],references:[id])
+@@map("TBL_SUMINISTROS_RECEPCION")
+}
+model Observacion {
+id Int @id @default(autoincrement()) @map("id_observacion")
+parteId Int @map("id_parte")
+tipoRegistro String @map("tipo_registro") @db.VarChar(100)
+responsableAsignado String? @map("responsable_asignado") @db.VarChar(150)
+plazo DateTime? @db.Date
+descripcion String @db.Text
+parte ParteDiario @relation(fields:[parteId],references:[id],onDelete:Cascade)
+@@map("TBL_OBSERVACIONES_VISITAS")
+}
+model EvidenciaFotografica {
+id Int @id @default(autoincrement())
+parteId Int @map("id_parte")
+nombreOriginal String @map("nombre_original") @db.VarChar(255)
+ruta String @unique @db.VarChar(255)
+descripcion String? @db.VarChar(500)
+mimeType String @map("mime_type") @db.VarChar(100)
+tamano Int
+createdAt DateTime @default(now()) @map("created_at")
+parte ParteDiario @relation(fields:[parteId],references:[id],onDelete:Cascade)
+@@map("TBL_EVIDENCIAS_FOTOGRAFICAS")
+}
+enum EstadoObra {
+ACTIVA
+PAUSADA
+FINALIZADA
+}
+enum EstadoDocumento {
+VIGENTE
+PENDIENTE
+VENCIDO
+ARCHIVADO
+}
+enum EstadoPlan {
+PENDIENTE
+EN_CURSO
+BLOQUEADA
+COMPLETADA
+}
+enum TipoInspeccion {
+CALIDAD
+SEGURIDAD
+AMBIENTAL
+}
+enum ResultadoInspeccion {
+CONFORME
+OBSERVACIONES
+NO_CONFORME
+}
+enum EstadoInspeccion {
+ABIERTA
+EN_SEGUIMIENTO
+CERRADA
+}

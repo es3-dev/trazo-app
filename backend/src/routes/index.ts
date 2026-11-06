@@ -1,0 +1,15 @@
+import { Router } from 'express';
+import authRouter from './auth';
+import { catalogRouter, obraRouter, personaRouter, parteRouter, documentoRouter, dashboardRouter, planRouter, inspeccionRouter } from './modules';
+import { auth } from '../middleware/auth';
+export const apiRouter = Router();
+apiRouter.use('/auth', authRouter);
+apiRouter.use(auth);
+apiRouter.use('/dashboard', dashboardRouter);
+apiRouter.use('/obras', obraRouter);
+apiRouter.use('/personas', personaRouter);
+apiRouter.use('/catalogos', catalogRouter);
+apiRouter.use('/partes', parteRouter);
+apiRouter.use('/documentos', documentoRouter);
+apiRouter.use('/planificacion', planRouter);
+apiRouter.use('/inspecciones', inspeccionRouter);
