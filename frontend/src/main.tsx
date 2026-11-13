@@ -5,6 +5,7 @@ import App from "./App";
 import "./styles.css";
 import "./pending-evidence.css";
 import "./trazo-identity.css";
+import "./apple-ui.css";
 ReactDOM.createRoot(document.getElementById("root")!).render(
     <React.StrictMode>
         <BrowserRouter>

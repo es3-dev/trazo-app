@@ -19,7 +19,7 @@ import {
     CalendarDays,
     ClipboardCheck,
 } from "lucide-react";
-import { api, uploadUrl } from "./services/api";
+import { api } from "./services/api";
 import { useAuth } from "./stores/auth";
 const nav = [
     ["/", "Panel", BarChart3],
@@ -823,6 +823,7 @@ function NewRecord({ kind, done }: { kind: string; done: () => void }) {
         </div>
     );
 }
+
 function Admin() {
     const [types, setTypes] = useState<any>({});
     const [type, setType] = useState("roles"),
@@ -1739,9 +1740,9 @@ function PhotoEvidence({
             <div className="photogrid">
                 {evidencias.length ? (
                     evidencias.map((x) => (
-                        <a href={uploadUrl(x.ruta)} target="_blank" rel="noreferrer">
+                        <a href={"http://localhost:3000/uploads/" + x.ruta} target="_blank">
                             <img
-                                src={uploadUrl(x.ruta)}
+                                src={"http://localhost:3000/uploads/" + x.ruta}
                                 alt={x.descripcion || x.nombreOriginal}
                             />
                             <span>{x.descripcion || x.nombreOriginal}</span>
@@ -2276,7 +2277,7 @@ function Documents() {
                     docs.data.map((d: any) => (
                         <div className="tablerow documentrow">
                             <a
-                                href={uploadUrl(d.ruta)} target="_blank" rel="noreferrer"
+                                href={"http://localhost:3000/uploads/" + d.ruta}
                             >
                                 {d.nombreOriginal}
                             </a>

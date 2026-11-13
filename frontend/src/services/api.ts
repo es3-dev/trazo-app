@@ -1,8 +1,5 @@
 import { useAuth } from "../stores/auth";
-// In production the browser talks to the same public domain through the proxy.
-// Local Docker development can keep using the API port directly.
-const base = import.meta.env.VITE_API_URL || (window.location.hostname === "localhost" ? "http://localhost:3000/api" : "/api");
-export const uploadUrl = (path: string) => `${base.replace(/\/api$/, "")}/uploads/${path}`;
+const base = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 export async function api<T>(path: string, opts: RequestInit = {}): Promise<T> {
     const token = useAuth.getState().token;
     const r = await fetch(`${base}${path}`, {

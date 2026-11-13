@@ -1,8 +1,0 @@
-{$TRAZO_DOMAIN} {
-  encode zstd gzip
-
-  @api path /api/* /uploads/* /health
-  reverse_proxy @api api:3000
-
-  reverse_proxy web:80
-}

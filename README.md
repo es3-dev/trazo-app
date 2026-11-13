@@ -1,10 +1,27 @@
 # TRAZO
 
-Plataforma web para gestión de obras, personal, documentos y partes diarios. La solución se compone de React/Vite, una API Express/TypeScript, Prisma y PostgreSQL; todos los servicios se levantan mediante Docker Compose.
+TRAZO es una plataforma de control diario de obra. Digitaliza la información que normalmente se registra en papel: partes de jornada, personal, equipos, documentos, evidencias fotográficas, planificación e inspecciones. Está pensada para que el equipo de campo registre lo que sucede en la obra y para que supervisión, dirección y administración tengan trazabilidad y una lectura clara del estado operativo.
+
+La solución se compone de React/Vite, una API Express/TypeScript, Prisma y PostgreSQL; todos los servicios se levantan mediante Docker Compose.
+
+## Qué puede hacer
+
+- Consultar un panel operativo con alertas, métricas y salud de cada obra.
+- Gestionar obras, empresas, personal, roles, cargos y asignaciones.
+- Registrar partes diarios con clima, asistencia, maquinaria, tareas, incidencias, suministros y observaciones.
+- Adjuntar evidencias fotográficas, previsualizarlas y retirar una imagen antes de confirmar el parte.
+- Gestionar documentos, planificación de actividades e inspecciones de calidad, seguridad y ambiente.
+
+## Requisitos
+
+- Docker Engine con Docker Compose Plugin.
+- Navegador web moderno.
+
+No necesita instalar Node.js ni PostgreSQL para probar el proyecto con Docker.
 
 ## Inicio rápido
 
-1. Copie `.env.example` como `.env` y asigne valores seguros a `POSTGRES_PASSWORD` y `JWT_SECRET` (mínimo 32 caracteres).
+1. Copie `.env.example` como `.env` y asigne valores seguros a `POSTGRES_PASSWORD` y `JWT_SECRET` (mínimo 32 caracteres). Asegúrese de que `DATABASE_URL` use la misma contraseña definida en `POSTGRES_PASSWORD`.
 2. Ejecute `docker compose up -d --build` desde esta carpeta.
 3. Abra `http://localhost:5173`. API: `http://localhost:3000/health`.
 
@@ -12,7 +29,7 @@ La primera ejecución aplica las migraciones. El conjunto de capacitación se ca
 
 ## Accesos del dataset de capacitación
 
-Todos los accesos autorizados usan la contraseña temporal `Trazo2026!`; los correos terminan en `@trazo.com`. El resto del personal existe para asignación y trazabilidad, pero **no tiene cuenta ni puede iniciar sesión**.
+Todos los accesos autorizados usan la contraseña temporal `Trazo2026!`; los correos terminan en `@trazo.com`. Para probar todas las capacidades, inicie sesión con `valentina.rojas@trazo.com` (ADMINISTRADOR). El resto del personal existe para asignación y trazabilidad, pero **no tiene cuenta ni puede iniciar sesión**.
 
 | Correo | Rol | Acceso |
 | --- | --- | --- |
@@ -72,7 +89,34 @@ La planificación permite controlar actividad, zona, responsable, fechas, avance
 
 Se conservan los nombres de las tablas del SQL recibido mediante `@@map`. La migración corrige sin cambiar el propósito funcional: documentos y teléfonos pasan a texto (preserva ceros y formatos); campos esenciales se marcan `NOT NULL`; se añaden unicidad para expediente, correo, documento y catálogos; se incorpora `TBL_USUARIOS` para hashes de contraseña fuera de `TBL_PERSONAS`; y se almacenan metadatos/rutas de archivos en la BD, no contenido binario. `TBL_PERSONA_EMPRESA` conserva su clave compuesta inicial; para múltiples períodos de la misma persona en una empresa, la siguiente migración debe añadir un identificador de vinculación.
 
-## Operación y copias
+## Servicios y operación local
+
+| Servicio | Dirección | Uso |
+| --- | --- | --- |
+| Web | `http://localhost:5173` | Interfaz de TRAZO. |
+| API | `http://localhost:3000` | API REST y archivos cargados. |
+| Base de datos | Red interna Docker | PostgreSQL; no se expone al equipo anfitrión. |
+
+Verifique que todos los servicios estén activos:
+
+```bash
+docker compose ps
+```
+
+Si alguno no inicia, consulte sus registros:
+
+```bash
+docker compose logs -f api
+docker compose logs -f web
+```
+
+Para reconstruir los servicios después de modificar el código:
+
+```bash
+docker compose up -d --build
+```
+
+## Datos, copias y reinicio
 
 Migraciones: `docker compose exec api npx prisma migrate deploy`. Para cargar el dataset en una base vacía: `docker compose run --rm api npx prisma db seed`. Para borrar y reconstruir por completo la base local: `docker compose run --rm api npx prisma migrate reset --force` (operación destructiva).
 
